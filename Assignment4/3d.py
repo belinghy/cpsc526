@@ -216,9 +216,9 @@ def SimWorld():
                   [z, z, z,   z,    z,    z,      z, z, k,   r2y, -r2x,   z,     z, z, o, r3y, -r3x, z,      z, z, z,   z, z, z,   z, z, z]
                   ])
 
-    w1I1w1 = np.cross(w1, np.matmul(I1, w1))
-    w2I2w2 = np.cross(w2, np.matmul(I2, w2))
-    w3I3w3 = np.cross(w3, np.matmul(I3, w3))
+    w1I1w1 = np.cross(-w1, np.matmul(I1, w1))
+    w2I2w2 = np.cross(-w2, np.matmul(I2, w2))
+    w3I3w3 = np.cross(-w3, np.matmul(I3, w3))
 
     w1w1r1_up = np.cross(w1, np.cross(w1, r1))
     w1w1r1_do = np.cross(w1, np.cross(w1, -r1))
@@ -229,9 +229,9 @@ def SimWorld():
     w3w3r3_up = np.cross(w3, np.cross(w3, r3))
     w3w3r3_do = np.cross(w3, np.cross(w3, -r3))
 
-    b = np.array([z, g, z, -k_d*w1[0]-w1I1w1[0], -k_d*w1[1]-w1I1w1[1], -k_d*w1[2]-w1I1w1[2],     
-                  z, g, z, -k_d*w2[0]-w2I2w2[0], -k_d*w2[1]-w2I2w2[1], -k_d*w2[2]-w2I2w2[2],
-                  z, g, z, -k_d*w3[0]-w3I3w3[0], -k_d*w3[1]-w3I3w3[1], -k_d*w3[2]-w3I3w3[2],
+    b = np.array([z, g, z, -k_d*w1[0]+w1I1w1[0], -k_d*w1[1]+w1I1w1[1], -k_d*w1[2]+w1I1w1[2],     
+                  z, g, z, -k_d*w2[0]+w2I2w2[0], -k_d*w2[1]+w2I2w2[1], -k_d*w2[2]+w2I2w2[2],
+                  z, g, z, -k_d*w3[0]+w3I3w3[0], -k_d*w3[1]+w3I3w3[1], -k_d*w3[2]+w3I3w3[2],
                   w1w1r1_up[0], w1w1r1_up[1], w1w1r1_up[2], 
                   w1w1r1_do[0]-w2w2r2_up[0], w1w1r1_do[1]-w2w2r2_up[1], w1w1r1_do[2]-w2w2r2_up[2],
                   w2w2r2_do[0]-w3w3r3_up[0], w2w2r2_do[1]-w3w3r3_up[1], w2w2r2_do[2]-w3w3r3_up[2]])
@@ -256,7 +256,7 @@ def SimWorld():
     cpoint2 = link2.posn + r2
     cdiff2 = cpoint2 - (link1.posn - r1)
     cvelocity2 = (link2.vel + np.cross(w2, r2)) - (link1.vel + np.cross(w1, -r1))
-    factor2 = 100*(cdiff2) + 200*(cvelocity2)
+    factor2 = 1000*(cdiff2) + 200*(cvelocity2)
     acc2 = acc2 - factor2 + acc1
 
     cpoint3 = link3.posn + r3
