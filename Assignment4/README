@@ -1,0 +1,28 @@
+# Pendulum Animation
+
+### File Description
+
+1. `526_q1_p1.jpg` and `526_q1_p2.jpg`
+    - Contains the derivation of dynamics equations used for a single-link pendulum
+2. `one_link.py`
+    - Simulation for single-link pendulum "without friction"
+    - The pendulum slowly gains energy over time due to numericaly errors, one workaround to set k_d = 0.001 or other small numbers at the top of the file
+    - The total energy doesn't remain constant over time, also due to numerical error (?)
+    - The animation is slow due to pausing required for matplotlib scatter plot in each loop
+3. `one_link_friction.py`
+    - Single-link pendulum with friction
+    - Similar to the previous case, but obviously the pendulum eventually settles
+4. `four_links.py`
+    - Four-link pendulum without friction
+5. `four_links_friction.py`
+    - Four-link pendulum with friction
+6. `floor.py`
+    - Four-link pendulum with friction and additional floor constraint
+    - The floor, modeled with spring and damper, has carefully chosen spring and damping constants specifically for the setup
+    - In general, choosing appropriate constants is difficult
+7. `3d_four_link.py`
+    - Work in progress... 
+
+### Acknowledgement
+
+Special thanks to Bicheng, Justin, Marjan, Polina, and Sam, for the very insightful discussions throughout the process of developing these models.  Often, seemingly trivial comments turned out to be as thought-provoking as coffee. 
