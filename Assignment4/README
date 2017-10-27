@@ -20,8 +20,8 @@
     - Four-link pendulum with friction and additional floor constraint
     - The floor, modeled with spring and damper, has carefully chosen spring and damping constants specifically for the setup
     - In general, choosing appropriate constants is difficult
-7. `3d_four_link.py`
-    - Work in progress... 
+7. `3d.py`
+    - 3D 3-links, stabilization is hard... Something wrong?
 
 ### Acknowledgement
 
