@@ -15,6 +15,14 @@ I'm using Ubuntu 17.10 and Anaconda Python 3.6.  Instructions for setting up Rob
     > conda install qt
     > export PKG_CONFIG_PATH=$(dirname $(dirname $(which python)))/lib/pkgconfig
 
+You may also run into the following error when running Roboschool,
+
+    QGLShaderProgram: could not create shader program
+    Could not create shader of type 2.
+
+Adding the following line to Python script should resolve the issue.  If not, clean install Nvidia GPU driver to a newer version.
+
+    from OpenGL import GLU
 
 #### Setting Up TensorFlow with GPU
 
