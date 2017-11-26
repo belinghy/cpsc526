@@ -60,7 +60,7 @@ if __name__ == '__main__':
     action_bound = game.action_bound
 
     agent = DDPG_TF(action_dim, state_dim, action_bound)
-    model_file = './saved_models/{}_{}.model'.format(GAME_NAME, int(time.time()))
+    model_file = './saved_models/{}_{}'.format(GAME_NAME, int(time.time()))
 
     train(env=env, agent=agent, max_ep=500, steps_per_ep=200, model_path=model_file)
     replay(env=env, agent=agent, model_path=model_file)
