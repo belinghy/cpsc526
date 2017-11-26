@@ -50,6 +50,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('env_name', metavar='ENV', type=str, help="e.g. robo_pendulum, robo_reacher, or robo_walker")
     parser.add_argument('-m', '--model_path', type=str, help="continue training from model")
+    parser.add_argument("-r", "--replay", help="replay model", action="store_true")
     args = parser.parse_args()
 
     if args.env_name:
@@ -61,7 +62,9 @@ if __name__ == '__main__':
     else:
         model_file = 'saved_models/{}_{}'.format(GAME_NAME, int(time.time()))
         train_from_model = False
-        
+    
+    if args.replay:
+        REPLAY_ONLY = True
     
     game = configs.games[GAME_NAME]
     env = gym.make(game.env_name)
@@ -72,6 +75,8 @@ if __name__ == '__main__':
 
     agent = DDPG_TF(action_dim, state_dim, action_bound)
 
-    train(env=env, agent=agent, max_ep=500, steps_per_ep=200, model_path=model_file, train_from_model=train_from_model)
+    if not REPLAY_ONLY:
+        train(env=env, agent=agent, max_ep=500, steps_per_ep=200, model_path=model_file, train_from_model=train_from_model)
+    
     replay(env=env, agent=agent, model_path=model_file)
     

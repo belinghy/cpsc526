@@ -8,6 +8,27 @@ the best human players in 2016 – A feat previously thought impossible for at l
 In late 2017, AlphaGo Zero was published.  A notable difference is that it was trained with deep RL without any kind of human guidance. Comparing the two generations of AlphaGo head-to-head, Zero dominated the previous generation 100-0 – An accomplishment that speaks to the ability of deep reinforcement learning.
 
 
+#### Files
+
+* `agents.py`  - contains RL agents; each agent should define methods: `choose_action`, `learn`, `store_transition`, `save`, and `restore`
+* `configs.py` - contains environment configs; sizes are number of dimenions and `action_bound` is `env.action_space.high` as outputted by gym
+
+To start training, run
+
+    > python main.py robo_pendulum -m <output_file>
+
+To play a game using a trained model, run
+
+    > python main.py robo_pendulum -m <model_file> -r
+
+
+#### Demo
+
+**RoboschoolInvertedPendulumSwingup-v1**
+
+!["robo-pendulum"](demo-gifs/robo-pendulum.gif "robo-pendulum")
+
+
 #### Setting Up Roboschool
 
 I'm using Ubuntu 17.10 and Anaconda Python 3.6.  Instructions for setting up Roboschool can be found at https://github.com/openai/roboschool.  I've installed (using `pip`) `gym`, `agents`, `pybullet`, and `PyOpenGL` previously.  The only deviation from the Roboschool instruction is that I needed to run the Anaconda specific steps (listed under "Mac, Anaconda with Python 3") before the last step.
