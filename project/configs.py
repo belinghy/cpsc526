@@ -16,7 +16,7 @@ robo_double_pendulum = Game(env_name='RoboschoolInvertedDoublePendulum-v1',
     input_size=9,
     output_size=1,
     time_factor=0,
-    action_bound=[-1., 1.]
+    action_bound=[1.]
 )
 games['robo_double_pendulum'] = robo_double_pendulum
 
@@ -24,7 +24,7 @@ robo_pendulum = Game(env_name='RoboschoolInvertedPendulumSwingup-v1',
     input_size=5,
     output_size=1,
     time_factor=1000,
-    action_bound=[-1., 1.]
+    action_bound=[1.]
 )
 games['robo_pendulum'] = robo_pendulum
 
@@ -32,7 +32,7 @@ robo_humanoid = Game(env_name='RoboschoolHumanoid-v1',
     input_size=44,
     output_size=17,
     time_factor=1000,
-    action_bound=[-1., 1.]
+    action_bound=[1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]
 )
 games['robo_humanoid'] = robo_humanoid
 
@@ -40,6 +40,6 @@ robo_walker= Game(env_name='RoboschoolWalker2d-v1',
     input_size=22,
     output_size=6,
     time_factor=1000,
-    action_bound=[-1., 1.]
+    action_bound=[1., 1., 1., 1., 1., 1.]
 )
 games['robo_walker'] = robo_walker

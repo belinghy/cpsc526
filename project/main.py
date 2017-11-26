@@ -5,7 +5,10 @@ from agents import DDPG_TF
 from environment import make_env
 from OpenGL import GLU
 
-def train(env, agent, max_ep, steps_per_ep, model_path):
+def train(env, agent, max_ep, steps_per_ep, model_path, train_from_model = False):
+    if train_from_model:
+        agent.restore(model_path)
+    
     for episode in range(max_ep):
         state = env.reset()
         ep_reward = 0.0
@@ -46,11 +49,19 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('env_name', metavar='ENV', type=str, help="e.g. robo_pendulum, robo_reacher, or robo_walker")
+    parser.add_argument('-m', '--model_path', type=str, help="continue training from model")
     args = parser.parse_args()
-
 
     if args.env_name:
         GAME_NAME = args.env_name
+
+    if args.model_path:
+        model_file = args.model_path
+        train_from_model = True
+    else:
+        model_file = 'saved_models/{}_{}'.format(GAME_NAME, int(time.time()))
+        train_from_model = False
+        
     
     game = configs.games[GAME_NAME]
     env = gym.make(game.env_name)
@@ -60,8 +71,7 @@ if __name__ == '__main__':
     action_bound = game.action_bound
 
     agent = DDPG_TF(action_dim, state_dim, action_bound)
-    model_file = './saved_models/{}_{}'.format(GAME_NAME, int(time.time()))
 
-    train(env=env, agent=agent, max_ep=500, steps_per_ep=200, model_path=model_file)
+    train(env=env, agent=agent, max_ep=500, steps_per_ep=200, model_path=model_file, train_from_model=train_from_model)
     replay(env=env, agent=agent, model_path=model_file)
     

@@ -21,7 +21,7 @@ class DDPG_TF:
 
         self.action_dim = action_dim
         self.state_dim = state_dim
-        self.action_bound = action_bound
+        self.action_bound = np.array(action_bound)
         self.state = tf.placeholder(tf.float32, [None, state_dim], 'state')
         self.next_state = tf.placeholder(tf.float32, [None, state_dim], 'next_state')
         self.reward = tf.placeholder(tf.float32, [None, 1], 'reward')
@@ -86,9 +86,9 @@ class DDPG_TF:
         with tf.variable_scope(scope):
             # one hidden layer 100 units
             net = tf.layers.dense(s, 100, activation=tf.nn.relu, name='layer1', trainable=trainable)
+            # tanh guarantees we are between [-1, 1]
             a = tf.layers.dense(net, self.action_dim, activation=tf.nn.tanh, name='action_layer', trainable=trainable)
-            # FIXME: We are assuming action_bound >= 1
-            return tf.multiply(a, self.action_bound, name='scaed_a')
+            return tf.multiply(a, self.action_bound, name='scaled_a')
 
     def _build_critic(self, s, a, scope, trainable):
         with tf.variable_scope(scope):
