@@ -1,7 +1,6 @@
 import configs
 import gym
 import time
-from agents import DDPG_TF
 from environment import make_env
 from OpenGL import GLU
 
@@ -16,7 +15,7 @@ def train(env, agent, max_ep, steps_per_ep, model_path, train_from_model = False
             action = agent.choose_action(state)
             next_state, reward, done, _ = env.step(action)
             
-            agent.store_transition(state, action, reward, next_state)
+            agent.store_transition(state, action, reward, next_state, done)
             ep_reward = ep_reward + reward
             if agent.memory_full:
                 # start to learn once memory is full
@@ -49,22 +48,19 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('env_name', metavar='ENV', type=str, help="e.g. robo_pendulum, robo_reacher, or robo_walker")
+    parser.add_argument('agent', metavar='AGENT', type=str, help="e.g. DDPG_TF, AC_Keras")
     parser.add_argument('-m', '--model_path', type=str, help="continue training from model")
     parser.add_argument("-r", "--replay", help="replay model", action="store_true")
     args = parser.parse_args()
 
     if args.env_name:
         GAME_NAME = args.env_name
-
-    if args.model_path:
-        model_file = args.model_path
-        train_from_model = True
-    else:
-        model_file = 'saved_models/{}_{}'.format(GAME_NAME, int(time.time()))
-        train_from_model = False
     
-    if args.replay:
-        REPLAY_ONLY = True
+    REPLAY_ONLY = args.replay
+
+    if REPLAY_ONLY and not args.model_path:
+        print('Must specifiy a model to to play')
+        exit(-1)
     
     game = configs.games[GAME_NAME]
     env = gym.make(game.env_name)
@@ -73,7 +69,25 @@ if __name__ == '__main__':
     action_dim = game.output_size
     action_bound = game.action_bound
 
-    agent = DDPG_TF(action_dim, state_dim, action_bound)
+    # Delay import
+    if args.agent == 'DDPG_TF':
+        from agents import DDPG_TF
+        agent = DDPG_TF(action_dim, state_dim, action_bound)
+    elif args.agent == 'AC_Keras':
+        from agents import AC_Keras
+        agent = AC_Keras(action_dim, state_dim, action_bound)
+    else:
+        print ('Unknown agent')
+        exit(-1)
+
+
+    if args.model_path:
+        model_file = args.model_path
+        train_from_model = True
+    else:
+        model_file = 'saved_models/{}_{}_{}'.format(GAME_NAME, args.agent, int(time.time()))
+        train_from_model = False
+
 
     if not REPLAY_ONLY:
         train(env=env, agent=agent, max_ep=500, steps_per_ep=200, model_path=model_file, train_from_model=train_from_model)
