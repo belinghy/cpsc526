@@ -68,7 +68,7 @@ class DDPG_TF:
         self.sess.run(self.soft_replace)
 
         # FIXME: Why is replacement ok?  Minibatch wrong?  Soft-replace?
-        indices = np.random.choice(DDPG_MEMORY_CAPACITY, size=DDPG_BATCH_SIZE)
+        indices = np.random.choice(DDPG_MEMORY_CAPACITY, size=DDPG_BATCH_SIZE, replace=False)
         batch_trans = self.memory[indices, :]
         bs = batch_trans[:, :self.state_dim]
         ba = batch_trans[:, self.state_dim : self.state_dim + self.action_dim]
