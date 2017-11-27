@@ -29,12 +29,13 @@ def train(env, agent, max_ep, steps_per_ep, model_path, train_from_model = False
     agent.save(model_path)
             
 
-def replay(env, agent, model_path):
+def replay(env, agent, model_path, sim_length=1000):
     agent.restore(model_path)
 
     while True:
         state = env.reset()
-        for _ in range(200):
+        done = False
+        for _ in range(sim_length):
             env.render()
             action = agent.choose_action(state)
             next_state, _, done, _ = env.step(action)
@@ -90,7 +91,7 @@ if __name__ == '__main__':
 
 
     if not REPLAY_ONLY:
-        train(env=env, agent=agent, max_ep=500, steps_per_ep=200, model_path=model_file, train_from_model=train_from_model)
+        train(env=env, agent=agent, max_ep=250, steps_per_ep=500, model_path=model_file, train_from_model=train_from_model)
     
     replay(env=env, agent=agent, model_path=model_file)
     

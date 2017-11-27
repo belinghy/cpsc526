@@ -90,8 +90,9 @@ class DDPG_TF:
         with tf.variable_scope(scope):
             # one hidden layer 100 units
             net = tf.layers.dense(s, 100, activation=tf.nn.relu, name='layer1', trainable=trainable)
+            h2 = tf.layers.dense(net, 100, activation=tf.nn.relu, name='layer2', trainable=trainable)
             # tanh guarantees we are between [-1, 1]
-            a = tf.layers.dense(net, self.action_dim, activation=tf.nn.tanh, name='action_layer', trainable=trainable)
+            a = tf.layers.dense(h2, self.action_dim, activation=tf.nn.tanh, name='action_layer', trainable=trainable)
             return tf.multiply(a, self.action_bound, name='scaled_a')
 
     def _build_critic(self, s, a, scope, trainable):
