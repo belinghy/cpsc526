@@ -104,6 +104,6 @@ if __name__ == '__main__':
 
 
     if not REPLAY_ONLY:
-        train(env=env, agent=agent, max_ep=250, steps_per_ep=500, model_path=model_file, train_from_model=train_from_model, show_plot=VISUAL_ON)
+        train(env=env, agent=agent, max_ep=1250, steps_per_ep=500, model_path=model_file, train_from_model=train_from_model, show_plot=VISUAL_ON)
 
     replay(env=env, agent=agent, model_path=model_file)

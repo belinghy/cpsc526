@@ -45,6 +45,7 @@ Adding the following line to Python script should resolve the issue.  If not, cl
 
     from OpenGL import GLU
 
+
 ### Setting Up TensorFlow with GPU
 
 Tensorflow's setup instruction is currently (at the time of this writing, TensorFlow v1.4.0) using an older version of CUDA and cuDNN.  By default, Ubuntu 17.10 will download CUDA 9 and cuDNN 7.
@@ -54,3 +55,13 @@ Tensorflow's setup instruction is currently (at the time of this writing, Tensor
 In order to use these specific versions, I needed to compile Tensorflow from source, the instructions can be found at https://www.tensorflow.org/install/install_sources.  Make sure to install all the dependencies first, then compiling from source should be straight-forward.
 
 
+### Soft Replacement
+
+Linear interpolation between target and eval.  Serves the same function as updating actor and critic (?)
+
+
+```python
+self.soft_replace = [[tf.assign(ta, (1-DDPG_TAU)*ta + DDPG_TAU*ea), 
+    tf.assign(tc, (1-DDPG_TAU)*tc + DDPG_TAU*ec)] 
+    for ta, ea, tc, ec in zip(self.at_params, self.ae_params, self.ct_params, self.ce_params)]
+```
