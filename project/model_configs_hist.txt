@@ -1,1 +1,2 @@
-robo_pendulum_DDPG_TF_1511805045 | LR_A=0.001 | LR_C=0.001 | TAU=0.01 | GAMMA=0.95 | MEM_CAP=10_000 | BATCH=32 | 2 dense hidden layers 100 units
+robo_pendulum_DDPG_TF_1511805045 | LR_A=0.001 | LR_C=0.001 | TAU=0.01 | GAMMA=0.95 | MEM_CAP=10_000 | BATCH=32  | 2 dense hidden layers 100 units
+robo_reacher_DDPG_TF_1511853377  | LR_A=0.001 | LR_C=0.001 | TAU=0.01 | GAMMA=0.95 | MEM_CAP=10_000 | BATCH=128 | 2 dense hidden layers 100 units
