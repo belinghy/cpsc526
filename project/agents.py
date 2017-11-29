@@ -7,13 +7,198 @@ from keras.layers.merge import Add
 from keras.optimizers import Adam
 import keras.backend as K
 
+
+PPO_LR_A = 0.0001
+PPO_LR_C = 0.0002
+PPO_A_UPDATE_STEPS = 10
+PPO_C_UPDATE_STEPS = 10
+PPO_BATCH_SIZE = 32
+PPO_MEMORY_CAPACITY = PPO_BATCH_SIZE
+PPO_GAMMA = 0.9
+
+class PPO_TF:
+
+    def __init__(self, action_dim, state_dim, action_bound):
+        # [ state, action, reward, next_state, done ]
+        self.action_dim = action_dim
+        self.state_dim = state_dim
+        self.action_bound = np.array(action_bound)
+        self.memory = np.zeros((PPO_MEMORY_CAPACITY, state_dim * 2 + action_dim + 2), dtype=np.float32)
+        self.pointer = 0
+        self.sess = tf.Session()
+        self.state = tf.placeholder(tf.float32, [None, state_dim], 'state')
+        self.method = [
+            dict(name='kl_pen', kl_target=0.01, lamb=0.5),
+            dict(name='clip', epsilon=0.2)
+        ][1]
+
+        # critic
+        with tf.variable_scope('critic'):
+            l1 = tf.layers.dense(self.state, 100, tf.nn.relu)
+            self.v = tf.layers.dense(l1, 1)
+            self.discounted_reward = tf.placeholder(tf.float32, [None, 1], 'discounted_reward')
+            self.advan = self.discounted_reward - self.v
+            self.closs = tf.reduce_mean(tf.square(self.advan))
+            self.ctrain_op = tf.train.AdamOptimizer(PPO_LR_C).minimize(self.closs)
+
+        # actor
+        pi, pi_params = self._build_anet('pi', trainable=True)
+        oldpi, oldpi_params = self._build_anet('oldpi', trainable=False)
+        with tf.variable_scope('sample_action'):
+            self.sample_op = tf.squeeze(pi.sample(1), axis=0)
+        with tf.variable_scope('update_oldpi'):
+            self.update_oldpi_op = [oldp.assign(p) for p, oldp in zip(pi_params, oldpi_params)]
+
+        self.action = tf.placeholder(tf.float32, [None, action_dim], 'action')
+        self.advantage = tf.placeholder(tf.float32, [None, 1], 'advantage')
+        with tf.variable_scope('loss'):
+            with tf.variable_scope('surrogate'):
+                ratio = pi.prob(self.action) / oldpi.prob(self.action)
+                surr = ratio * self.advantage
+            if self.method['name'] == 'kl_pen':
+                self.lamb = tf.placeholder(tf.float32, None, 'lambda')
+                kl = tf.distributions.kl_divergence(oldpi, pi)
+                self.kl_mean = tf.reduce_mean(kl)
+                self.aloss = -(tf.reduce_mean(surr - self.lamb * kl))
+            elif self.method['name'] == 'clip':
+                self.aloss = -tf.reduce_mean(tf.minimum(
+                    surr,
+                    tf.clip_by_value(ratio, 1.-self.method['epsilon'], 1.+self.method['epsilon'])*self.advantage))
+
+        with tf.variable_scope('atrain'):
+            self.atrain_op = tf.train.AdamOptimizer(PPO_LR_A).minimize(self.aloss)
+
+        self.sess.run(tf.global_variables_initializer())
+
+    def update(self, s, a, r):
+        self.sess.run(self.update_oldpi_op)
+        adv = self.sess.run(self.advan, {self.state: s, self.discounted_reward: r})
+        # adv = (adv - adv.mean())/(adv.std()+1e-6)     # sometimes helpful
+
+        # update actor
+        if self.method['name'] == 'kl_pen':
+            for _ in range(A_UPDATE_STEPS):
+                _, kl = self.sess.run(
+                    [self.atrain_op, self.kl_mean],
+                    {self.state: s, self.action: a, self.advantage: adv, self.lamb: self.method['lamb']})
+                if kl > 4*self.method['kl_target']:  # this in in google's paper
+                    break
+            if kl < self.method['kl_target'] / 1.5:  # adaptive lambda, this is in OpenAI's paper
+                self.method['lamb'] /= 2
+            elif kl > self.method['kl_target'] * 1.5:
+                self.method['lamb'] *= 2
+            self.method['lamb'] = np.clip(self.method['lamb'], 1e-4, 10)    # sometimes explode, this clipping is my solution
+        elif self.method['name'] == 'clip':   # clipping method, find this is better (OpenAI's paper)
+            [self.sess.run(self.atrain_op, {self.state: s, self.action: a, self.advantage: adv}) for _ in range(PPO_A_UPDATE_STEPS)]
+
+        # update critic
+        [self.sess.run(self.ctrain_op, {self.state: s, self.discounted_reward: r}) for _ in range(PPO_C_UPDATE_STEPS)]
+
+    def _build_anet(self, name, trainable):
+        with tf.variable_scope(name):
+            l1 = tf.layers.dense(self.state, 100, tf.nn.relu, trainable=trainable)
+            mu = 2 * tf.layers.dense(l1, self.action_dim, tf.nn.tanh, trainable=trainable)
+            sigma = tf.layers.dense(l1, self.action_dim, tf.nn.softplus, trainable=trainable)
+            norm_dist = tf.distributions.Normal(loc=mu, scale=sigma)
+        params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)
+        return norm_dist, params
+
+    def choose_action(self, s):
+        s = s[np.newaxis, :]
+        a = self.sess.run(self.sample_op, {self.state: s})[0]
+        return np.clip(a, -self.action_bound, self.action_bound)
+
+    def get_v(self, s):
+        if s.ndim < 2: s = s[np.newaxis, :]
+        return self.sess.run(self.v, {self.state: s})[0, 0]
+
+    def store_transition(self, s, a, r, s_, d):
+        transition = np.hstack((s, a, [r], s_, [d])) # reward was a scalar
+        index = self.pointer % PPO_MEMORY_CAPACITY
+        self.memory[index, :] = transition
+        self.pointer += 1
+
+    def save(self, path):
+        saver = tf.train.Saver()
+        saver.save(self.sess, path, write_meta_graph=False)
+
+    def restore(self, path):
+        saver = tf.train.Saver()
+        saver.restore(self.sess, path)
+
+
+    def train(self, env, max_ep, steps_per_ep, model_path, train_from_model=False, show_plot=False):
+        if train_from_model:
+            self.restore(model_path)
+
+        if show_plot:
+            import pyqtgraph as pg
+            rewardplot = pg.plot(title='Episode Reward Graph')
+
+        ep_reward_list = np.array([])
+        for episode in range(max_ep):
+            state = env.reset()
+            ep_reward = 0.0
+            for step in range(steps_per_ep):
+                action = self.choose_action(state)
+                next_state, reward, done, _ = env.step(action)
+
+                self.store_transition(state, action, reward, next_state, done)
+                ep_reward = ep_reward + reward
+                
+                if (self.pointer + 1) % PPO_BATCH_SIZE == 0 or step == steps_per_ep - 1:
+                    v_s_ = self.get_v(next_state)
+                    buffer_r = self.memory[:, -self.state_dim-2 : -self.state_dim-1]
+                    discounted_r = []
+
+                    # reverse, calculate discount
+                    for r in buffer_r[::-1]:
+                        v_s_ = r + PPO_GAMMA * v_s_
+                        discounted_r.append(v_s_)
+                    discounted_r.reverse()
+
+                    bs = self.memory[:, :self.state_dim]
+                    ba = self.memory[:, self.state_dim : self.state_dim + self.action_dim]
+                    br = np.array(discounted_r)
+                    self.update(bs, ba, br)
+
+                    self.pointer = 0
+
+                state = next_state
+                if done or step == steps_per_ep-1:
+                    print ('Episode: {} | Step: {} | Done?: {} | Reward: {}'.format(episode, step, 'Yes' if done else 'No', ep_reward))
+                    break
+
+            if show_plot:
+                ep_reward_list = np.append(ep_reward_list, ep_reward)
+                rewardplot.plot(ep_reward_list, pen='y')
+                pg.QtGui.QApplication.processEvents()
+
+        self.save(model_path)
+
+    def replay(self, env, model_path, sim_length=1000):
+        self.restore(model_path)
+
+        while True:
+            state = env.reset()
+            done = False
+            for _ in range(sim_length):
+                env.render()
+                action = self.choose_action(state)
+                next_state, _, done, _ = env.step(action)
+                state = next_state
+                if done:
+                    break
+
+
+
 # ======================== DDPG_TF Hyper-parameters ===========================#
 DDPG_LR_A = 0.0001       # actor learning rate
 DDPG_LR_C = 0.0001       # critic learning rate
 DDPG_TAU = 0.01         # soft replacement
 DDPG_GAMMA = 0.95       # discount rate
-DDPG_MEMORY_CAPACITY = 496
-DDPG_BATCH_SIZE = 248
+DDPG_MEMORY_CAPACITY = 512
+DDPG_BATCH_SIZE = 256
 
 class DDPG_TF:
     def __init__(self, action_dim, state_dim, action_bound):
@@ -111,6 +296,54 @@ class DDPG_TF:
     def restore(self, path):
         saver = tf.train.Saver()
         saver.restore(self.sess, path)
+
+    def train(self, env, max_ep, steps_per_ep, model_path, train_from_model=False, show_plot=False):
+        if train_from_model:
+            self.restore(model_path)
+
+        if show_plot:
+            import pyqtgraph as pg
+            rewardplot = pg.plot(title='Episode Reward Graph')
+
+        ep_reward_list = np.array([])
+        for episode in range(max_ep):
+            state = env.reset()
+            ep_reward = 0.0
+            for step in range(steps_per_ep):
+                action = self.choose_action(state)
+                next_state, reward, done, _ = env.step(action)
+
+                self.store_transition(state, action, reward, next_state, done)
+                ep_reward = ep_reward + reward
+                if self.memory_full:
+                    # start to learn once memory is full
+                    self.learn()
+
+                state = next_state
+                if done or step == steps_per_ep-1:
+                    print ('Episode: {} | Step: {} | Done?: {} | Reward: {}'.format(episode, step, 'Yes' if done else 'No', ep_reward))
+                    break
+
+            if show_plot:
+                ep_reward_list = np.append(ep_reward_list, ep_reward)
+                rewardplot.plot(ep_reward_list, pen='y')
+                pg.QtGui.QApplication.processEvents()
+
+        self.save(model_path)
+
+    def replay(self, env, model_path, sim_length=1000):
+        self.restore(model_path)
+
+        while True:
+            state = env.reset()
+            done = False
+            for _ in range(sim_length):
+                env.render()
+                action = self.choose_action(state)
+                next_state, _, done, _ = env.step(action)
+                state = next_state
+                if done:
+                    break
 
 # ======================== ActorCritic-Keras Hyper-parameters ===========================#
 AC_LR_A = 0.001       # actor learning rate
@@ -272,3 +505,53 @@ class AC_Keras:
     def restore(self, path):
         saver = tf.train.Saver()
         saver.restore(self.sess, path)
+
+
+    def train(self, env, max_ep, steps_per_ep, model_path, train_from_model=False, show_plot=False):
+        if train_from_model:
+            self.restore(model_path)
+
+        if show_plot:
+            import pyqtgraph as pg
+            rewardplot = pg.plot(title='Episode Reward Graph')
+
+        ep_reward_list = np.array([])
+        for episode in range(max_ep):
+            state = env.reset()
+            ep_reward = 0.0
+            for step in range(steps_per_ep):
+                action = self.choose_action(state)
+                next_state, reward, done, _ = env.step(action)
+
+                self.store_transition(state, action, reward, next_state, done)
+                ep_reward = ep_reward + reward
+                if self.memory_full:
+                    # start to learn once memory is full
+                    self.learn()
+
+                state = next_state
+                if done or step == steps_per_ep-1:
+                    print ('Episode: {} | Step: {} | Done?: {} | Reward: {}'.format(episode, step, 'Yes' if done else 'No', ep_reward))
+                    break
+
+            if show_plot:
+                ep_reward_list = np.append(ep_reward_list, ep_reward)
+                rewardplot.plot(ep_reward_list, pen='y')
+                pg.QtGui.QApplication.processEvents()
+
+        self.save(model_path)
+
+
+    def replay(self, env, model_path, sim_length=1000):
+        self.restore(model_path)
+
+        while True:
+            state = env.reset()
+            done = False
+            for _ in range(sim_length):
+                env.render()
+                action = self.choose_action(state)
+                next_state, _, done, _ = env.step(action)
+                state = next_state
+                if done:
+                    break
