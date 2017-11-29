@@ -97,7 +97,7 @@ class PPO_TF:
     def _build_anet(self, name, trainable):
         with tf.variable_scope(name):
             l1 = tf.layers.dense(self.state, 100, tf.nn.relu, trainable=trainable)
-            mu = 2 * tf.layers.dense(l1, self.action_dim, tf.nn.tanh, trainable=trainable)
+            mu = tf.layers.dense(l1, self.action_dim, tf.nn.tanh, trainable=trainable)
             sigma = tf.layers.dense(l1, self.action_dim, tf.nn.softplus, trainable=trainable)
             norm_dist = tf.distributions.Normal(loc=mu, scale=sigma)
         params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)
@@ -146,7 +146,7 @@ class PPO_TF:
                 self.store_transition(state, action, reward, next_state, done)
                 ep_reward = ep_reward + reward
                 
-                if (self.pointer + 1) % PPO_BATCH_SIZE == 0 or step == steps_per_ep - 1:
+                if self.pointer % PPO_BATCH_SIZE == 0 or step == steps_per_ep - 1:
                     v_s_ = self.get_v(next_state)
                     buffer_r = self.memory[:, -self.state_dim-2 : -self.state_dim-1]
                     discounted_r = []
