@@ -8,11 +8,11 @@ from keras.optimizers import Adam
 import keras.backend as K
 
 # ======================== DDPG_TF Hyper-parameters ===========================#
-DDPG_LR_A = 0.0005       # actor learning rate
-DDPG_LR_C = 0.0005       # critic learning rate
+DDPG_LR_A = 0.0001       # actor learning rate
+DDPG_LR_C = 0.0001       # critic learning rate
 DDPG_TAU = 0.01         # soft replacement
 DDPG_GAMMA = 0.95       # discount rate
-DDPG_MEMORY_CAPACITY = 10_000
+DDPG_MEMORY_CAPACITY = 496
 DDPG_BATCH_SIZE = 248
 
 class DDPG_TF:
