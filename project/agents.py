@@ -99,7 +99,7 @@ class PPO_TF:
             l1 = tf.layers.dense(self.state, 100, tf.nn.relu, trainable=trainable)
             mu = tf.layers.dense(l1, self.action_dim, tf.nn.tanh, trainable=trainable)
             sigma = tf.layers.dense(l1, self.action_dim, tf.nn.softplus, trainable=trainable)
-            norm_dist = tf.distributions.Normal(loc=mu, scale=sigma)
+            norm_dist = tf.distributions.Normal(loc=mu, scale=sigma, allow_nan_stats=True)
         params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)
         return norm_dist, params
 
