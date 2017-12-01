@@ -65,3 +65,8 @@ self.soft_replace = [[tf.assign(ta, (1-DDPG_TAU)*ta + DDPG_TAU*ea),
     tf.assign(tc, (1-DDPG_TAU)*tc + DDPG_TAU*ec)] 
     for ta, ea, tc, ec in zip(self.at_params, self.ae_params, self.ct_params, self.ce_params)]
 ```
+
+
+### Batch Size and Memory
+
+Some environments finish relatively quickly, extending the duration of each episode doesn't really help.  Therefore, having a bigger memory also is not necessarily helpful.
