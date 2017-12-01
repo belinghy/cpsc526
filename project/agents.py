@@ -349,11 +349,11 @@ class DDPG_TF:
 AC_LR_A = 0.001       # actor learning rate
 AC_LR_C = 0.001       # critic learning rate
 AC_TAU = 0.01         # soft replacement
-AC_GAMMA = 0.95       # discount rate
+AC_GAMMA = 0.90       # discount rate
 AC_EPSILON = 1.       # Exploration threshold
 AC_EPSILON_DECAY = 0.995
 AC_RANDOM_ACTION_SIGMA = 0.1
-AC_MEMORY_CAPACITY = 10_000
+AC_MEMORY_CAPACITY = 1
 AC_BATCH_SIZE = 1
 
 class AC_Keras:
@@ -489,6 +489,7 @@ class AC_Keras:
 
             state = state[None, :]
             nstate = nstate[None, :]
+            action = action[None, :]
 
             if not done:
                 target_action = self.target_actor_model.predict(nstate)
