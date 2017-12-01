@@ -69,4 +69,4 @@ self.soft_replace = [[tf.assign(ta, (1-DDPG_TAU)*ta + DDPG_TAU*ea),
 
 ### Batch Size and Memory
 
-Some environments finish relatively quickly, extending the duration of each episode doesn't really help.  Therefore, having a bigger memory also is not necessarily helpful.
+Some environments finish relatively quickly, extending the duration of each episode doesn't really help.  Therefore, having a bigger memory and batch is not necessarily helpful.  For offline methods, perhaps it's desirable to start training with shorter duration in each episode and gradually increasing the length.

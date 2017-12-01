@@ -196,9 +196,9 @@ class PPO_TF:
 DDPG_LR_A = 0.0001       # actor learning rate
 DDPG_LR_C = 0.0001       # critic learning rate
 DDPG_TAU = 0.01         # soft replacement
-DDPG_GAMMA = 0.98       # discount rate
-DDPG_MEMORY_CAPACITY = 256
-DDPG_BATCH_SIZE = 128
+DDPG_GAMMA = 0.90       # discount rate
+DDPG_MEMORY_CAPACITY = 60
+DDPG_BATCH_SIZE = 60
 
 class DDPG_TF:
     def __init__(self, action_dim, state_dim, action_bound):

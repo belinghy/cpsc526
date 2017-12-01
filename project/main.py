@@ -28,7 +28,7 @@ if __name__ == '__main__':
         exit(-1)
 
     game = configs.games[GAME_NAME]
-    env = gym.make(game.env_name)
+    env = gym.make(game.env_name).unwrapped
 
     state_dim = game.input_size
     action_dim = game.output_size
@@ -58,6 +58,6 @@ if __name__ == '__main__':
 
 
     if not REPLAY_ONLY:
-        agent.train(env=env, max_ep=250, steps_per_ep=200, model_path=model_file, train_from_model=train_from_model, show_plot=VISUAL_ON)
+        agent.train(env=env, max_ep=2250, steps_per_ep=60, model_path=model_file, train_from_model=train_from_model, show_plot=VISUAL_ON)
 
-    agent.replay(env=env, model_path=model_file)
+    agent.replay(env=env, model_path=model_file, sim_length=128)
