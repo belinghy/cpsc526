@@ -70,3 +70,5 @@ self.soft_replace = [[tf.assign(ta, (1-DDPG_TAU)*ta + DDPG_TAU*ea),
 ### Batch Size and Memory
 
 Some environments finish relatively quickly, extending the duration of each episode doesn't really help.  Therefore, having a bigger memory and batch is not necessarily helpful.  For offline methods, perhaps it's desirable to start training with shorter duration in each episode and gradually increasing the length.
+
+For reinforcement learning, it is not necessary for minibatch to go through all training data in one episode.  When memory is sufficiently large, choosing without replacement is also not necessary; choosing replacement may be faster.  Batch size should be on the same scale as the number of steps in each episode (?)

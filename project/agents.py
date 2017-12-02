@@ -268,7 +268,7 @@ class DDPG_TF:
         index = self.pointer % DDPG_MEMORY_CAPACITY
         self.memory[index, :] = transition
         self.pointer += 1
-        if self.pointer >= DDPG_MEMORY_CAPACITY: # indicator for learning
+        if self.pointer > DDPG_MEMORY_CAPACITY: # indicator for learning
             self.memory_full = True
 
     def _build_actor(self, s, scope, trainable):
@@ -318,8 +318,6 @@ class DDPG_TF:
                 if self.memory_full:
                     # start to learn once memory is full
                     self.learn()
-                    self.pointer = 0
-                    self.memory_full = False
 
                 state = next_state
                 if done or step == steps_per_ep-1:
@@ -558,4 +556,5 @@ class AC_Keras:
                 state = next_state
                 if done:
                     break
+
 
