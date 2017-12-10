@@ -9,6 +9,7 @@ from baselines.ppo2.policies import MlpPolicy
 
 
 policy = MlpPolicy
+# ======  None of these matter ======#
 nsteps=2048
 nminibatches=32
 lam=0.95
@@ -24,6 +25,7 @@ max_grad_norm=0.5
 vf_coef=0.5
 
 env = gym.make('RoboschoolReacher-v1')
+# ===== For replay this has to be 1 ===== #
 nenvs = 1
 ob_space = env.observation_space
 ac_space = env.action_space
