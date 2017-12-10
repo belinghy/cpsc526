@@ -17,13 +17,13 @@ OUTPUT_GRAPH = True
 LOG_DIR = './log'
 N_WORKERS = multiprocessing.cpu_count()
 MAX_EP_STEP = 150
-MAX_GLOBAL_EP = 100
+MAX_GLOBAL_EP = 1e4
 GLOBAL_NET_SCOPE = 'Global_Net'
 UPDATE_GLOBAL_ITER = 10
 GAMMA = 0.9
-ENTROPY_BETA = 0.01
-LR_A = 0.00001    # learning rate for actor
-LR_C = 0.00001    # learning rate for critic
+ENTROPY_BETA = 0.005
+LR_A = 0.00005    # learning rate for actor
+LR_C = 0.0001    # learning rate for critic
 GLOBAL_RUNNING_R = []
 GLOBAL_EP = 0
 
@@ -54,7 +54,7 @@ class ACNet(object):
                     self.c_loss = tf.reduce_mean(tf.square(td))
 
                 with tf.name_scope('wrap_a_out'):
-                    mu, sigma = mu * A_BOUND[1], sigma + 1e-4
+                    mu, sigma = mu * A_BOUND[1], sigma + 1e-6
 
                 normal_dist = tf.distributions.Normal(mu, sigma)
 
@@ -82,14 +82,14 @@ class ACNet(object):
     def _build_net(self, scope):
         w_init = tf.random_normal_initializer(0., .1)
         with tf.variable_scope('actor'):
-            h1 = tf.layers.dense(self.s, 64, tf.nn.tanh, kernel_initializer=w_init, name='h1_a')
-            h2 = tf.layers.dense(h1, 64, tf.nn.tanh, kernel_initializer=w_init, name='h2_a')
-            mu = tf.layers.dense(h2, N_A, tf.nn.tanh, kernel_initializer=w_init, name='mu')
-            sigma = tf.layers.dense(h2, N_A, tf.nn.softplus, kernel_initializer=w_init, name='sigma')
+            h1 = tf.layers.dense(self.s, 32, tf.nn.relu6, name='h1_a')
+            h2 = tf.layers.dense(h1, 32, tf.nn.relu6, name='h2_a')
+            mu = tf.layers.dense(h2, N_A, tf.nn.tanh, name='mu')
+            sigma = tf.layers.dense(h2, N_A, tf.nn.softplus, name='sigma')
         with tf.variable_scope('critic'):
-            h1 = tf.layers.dense(self.s, 64, tf.nn.tanh, kernel_initializer=w_init, name='c_h1')
-            h2 = tf.layers.dense(h1, 64, tf.nn.tanh, kernel_initializer=w_init, name='c_h2')
-            v = tf.layers.dense(h2, 1, kernel_initializer=w_init, name='v')  # state value
+            l1 = tf.layers.dense(self.s, 32, tf.nn.relu6, name='c_h1')
+            l2 = tf.layers.dense(l1, 32, tf.nn.relu6, name='c_h2')
+            v = tf.layers.dense(l2, 1, name='v')  # state value
         a_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope + '/actor')
         c_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope + '/critic')
         return mu, sigma, v, a_params, c_params
@@ -125,10 +125,11 @@ class Worker(object):
                 s_, r, done, info = self.env.step(a)
                 done = True if ep_t == MAX_EP_STEP - 1 else False
 
+                r += 50
                 ep_r += r
                 buffer_s.append(s)
                 buffer_a.append(a)
-                buffer_r.append((r+8)/8)    # normalize
+                buffer_r.append(r)
 
                 if total_step % UPDATE_GLOBAL_ITER == 0 or done:   # update global and assign to local net
                     if done:
@@ -208,7 +209,7 @@ if __name__ == "__main__":
     env = gym.make(GAME)
     replay_AC = ACNet('replay', GLOBAL_AC)
     SESS.run(tf.global_variables_initializer())
-
+    ENTROPY_BETA = 0 # Turn off exploration
     while True:
         s = env.reset()
         for t in range(150):
