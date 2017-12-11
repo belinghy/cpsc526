@@ -1,4 +1,7 @@
+==================  EXPERIMENT ON ENTROPY BETA =================
+
 FILE : a3c_1.png
+MAX_EP_STEP = 150
 UPDATE_GLOBAL_ITER = 5
 GAMMA = 0.9
 ENTROPY_BETA = 0.02
@@ -8,6 +11,7 @@ LR_C = 2e-4
 ==============================
 
 FILE : a3c_2.png
+MAX_EP_STEP = 150
 UPDATE_GLOBAL_ITER = 5
 GAMMA = 0.9
 ENTROPY_BETA = 0.05
@@ -17,8 +21,64 @@ LR_C = 2e-4
 ==============================
 
 FILE : a3c_3.png
+MAX_EP_STEP = 150
 UPDATE_GLOBAL_ITER = 5
 GAMMA = 0.9
 ENTROPY_BETA = 0.005
 LR_A = 1e-4
 LR_C = 2e-4
+
+
+==================  EXPERIMENT ON UPDATE_GLOBAL_ITER =================
+
+FILE : a3c_4.png
+MAX_EP_STEP = 150
+UPDATE_GLOBAL_ITER = 10
+GAMMA = 0.9
+ENTROPY_BETA = 0.02
+LR_A = 1e-4
+LR_C = 2e-4
+
+==============================
+
+FILE : a3c_5.png
+MAX_EP_STEP = 150
+UPDATE_GLOBAL_ITER = 32
+GAMMA = 0.9
+ENTROPY_BETA = 0.02
+LR_A = 1e-4
+LR_C = 2e-4
+
+==============================
+
+FILE : a3c_6.png
+MAX_EP_STEP = 150
+UPDATE_GLOBAL_ITER = 64
+GAMMA = 0.9
+ENTROPY_BETA = 0.02
+LR_A = 1e-4
+LR_C = 2e-4
+
+==================  EXPERIMENT ON MIN_BATCH_SIZE =================
+
+FILE : ppo_1.png
+nsteps=2048
+nminibatches=32             
+lam=0.95
+gamma=0.99
+noptepochs=10
+ent_coef=0.0
+lr=3e-4
+cliprange=0.2
+
+==============================
+
+FILE : ppo_2.png
+nsteps=192
+nminibatches=32             
+lam=0.95
+gamma=0.99
+noptepochs=10
+ent_coef=0.0
+lr=3e-4
+cliprange=0.2
