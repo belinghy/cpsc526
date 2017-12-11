@@ -1,4 +1,4 @@
-a3c1
+FILE : a3c_1.png
 UPDATE_GLOBAL_ITER = 5
 GAMMA = 0.9
 ENTROPY_BETA = 0.02
@@ -7,3 +7,18 @@ LR_C = 2e-4
 
 ==============================
 
+FILE : a3c_2.png
+UPDATE_GLOBAL_ITER = 5
+GAMMA = 0.9
+ENTROPY_BETA = 0.05
+LR_A = 1e-4
+LR_C = 2e-4
+
+==============================
+
+FILE : a3c_3.png
+UPDATE_GLOBAL_ITER = 5
+GAMMA = 0.9
+ENTROPY_BETA = 0.005
+LR_A = 1e-4
+LR_C = 2e-4
