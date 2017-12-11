@@ -17,13 +17,13 @@ OUTPUT_GRAPH = True
 LOG_DIR = './log'
 N_WORKERS = multiprocessing.cpu_count()
 MAX_EP_STEP = 150
-MAX_GLOBAL_EP = 1e4
+MAX_GLOBAL_EP = 1e6 // MAX_EP_STEP + 1 
 GLOBAL_NET_SCOPE = 'Global_Net'
-UPDATE_GLOBAL_ITER = 10
+UPDATE_GLOBAL_ITER = 5
 GAMMA = 0.9
-ENTROPY_BETA = 0.005
-LR_A = 0.00005    # learning rate for actor
-LR_C = 0.0001    # learning rate for critic
+ENTROPY_BETA = 0.02
+LR_A = 1e-4    # learning rate for actor
+LR_C = 2e-4    # learning rate for critic
 GLOBAL_RUNNING_R = []
 GLOBAL_EP = 0
 
@@ -80,7 +80,7 @@ class ACNet(object):
                     self.update_c_op = OPT_C.apply_gradients(zip(self.c_grads, globalAC.c_params))
 
     def _build_net(self, scope):
-        w_init = tf.random_normal_initializer(0., .1)
+        # w_init = tf.contrib.layers.xavier_initializer()
         with tf.variable_scope('actor'):
             h1 = tf.layers.dense(self.s, 32, tf.nn.relu6, name='h1_a')
             h2 = tf.layers.dense(h1, 32, tf.nn.relu6, name='h2_a')
@@ -125,7 +125,6 @@ class Worker(object):
                 s_, r, done, info = self.env.step(a)
                 done = True if ep_t == MAX_EP_STEP - 1 else False
 
-                r += 50
                 ep_r += r
                 buffer_s.append(s)
                 buffer_a.append(a)
@@ -160,12 +159,17 @@ class Worker(object):
                     else:
                         GLOBAL_RUNNING_R.append(0.9 * GLOBAL_RUNNING_R[-1] + 0.1 * ep_r)
                     print(
+                        '{0:.1f}% |'.format(GLOBAL_EP/MAX_GLOBAL_EP*100),
                         self.name,
                         "Ep:", GLOBAL_EP,
                         "| Ep_r: %i" % GLOBAL_RUNNING_R[-1],
                           )
                     GLOBAL_EP += 1
                     break
+
+def running_mean(x, N):
+    cumsum = np.cumsum(np.insert(x, 0, 0)) 
+    return (cumsum[N:] - cumsum[:-N]) / float(N)
 
 if __name__ == "__main__":
     SESS = tf.Session()
@@ -200,8 +204,10 @@ if __name__ == "__main__":
     saver.save(SESS, './a3c', write_meta_graph=False)
 
     plt.plot(np.arange(len(GLOBAL_RUNNING_R)), GLOBAL_RUNNING_R)
-    plt.xlabel('step')
-    plt.ylabel('Total moving reward')
+    N = 100
+    plt.plot(np.arange(len(GLOBAL_RUNNING_R)-N+1), running_mean(GLOBAL_RUNNING_R, N))
+    plt.xlabel('Episode')
+    plt.ylabel('Moving Reward')
     plt.ion()
     plt.show()
 

@@ -1,0 +1,9 @@
+a3c1
+UPDATE_GLOBAL_ITER = 5
+GAMMA = 0.9
+ENTROPY_BETA = 0.02
+LR_A = 1e-4
+LR_C = 2e-4
+
+==============================
+
