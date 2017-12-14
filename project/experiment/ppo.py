@@ -151,6 +151,10 @@ class Worker(object):
             print('{0:.1f}%'.format(GLOBAL_EP/EP_MAX*100), '|W%i' % self.wid,  '|Ep_r: %.2f' % ep_r,)
 
 
+def running_mean(x, N):
+    cumsum = np.cumsum(np.insert(x, 0, 0)) 
+    return (cumsum[N:] - cumsum[:-N]) / float(N)
+
 if __name__ == '__main__':
     GLOBAL_PPO = PPO()
     UPDATE_EVENT, ROLLING_EVENT = threading.Event(), threading.Event()
@@ -177,7 +181,10 @@ if __name__ == '__main__':
 
     # plot reward change and test
     plt.plot(np.arange(len(GLOBAL_RUNNING_R)), GLOBAL_RUNNING_R)
+    N = 100
+    plt.plot(np.arange(len(GLOBAL_RUNNING_R)-N+1), running_mean(GLOBAL_RUNNING_R, N))
     plt.xlabel('Episode'); plt.ylabel('Moving reward'); plt.ion(); plt.show()
+    
     env = gym.make(GAME)
     while True:
         s = env.reset()

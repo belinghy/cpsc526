@@ -82,3 +82,39 @@ noptepochs=10
 ent_coef=0.0
 lr=3e-4
 cliprange=0.2
+
+==============================
+
+FILE : ppo_2.png
+nsteps=512
+nminibatches=32             
+lam=0.95
+gamma=0.99
+noptepochs=10
+ent_coef=0.0
+lr=3e-4
+cliprange=0.2
+
+==============================
+
+FILE : a3c_7.png
+MAX_EP_STEP = 1024
+UPDATE_GLOBAL_ITER = 64
+GAMMA = 0.9
+ENTROPY_BETA = 0.02
+LR_A = 1e-4
+LR_C = 2e-4
+
+
+
+
+========================== RANDOM =========================
+
+FILE : a3c_8.png
+TOTAL_STEPS = 5e6
+MAX_EP_STEP = 200
+UPDATE_GLOBAL_ITER = 32
+GAMMA = 0.9
+ENTROPY_BETA = 0.02
+LR_A = 1e-4
+LR_C = 2e-4
