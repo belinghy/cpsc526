@@ -16,8 +16,8 @@ GAME = 'RoboschoolReacher-v1'
 OUTPUT_GRAPH = True
 LOG_DIR = './log'
 N_WORKERS = multiprocessing.cpu_count()
-MAX_EP_STEP = 200
-MAX_GLOBAL_EP = 5e6 // MAX_EP_STEP + 1 
+MAX_EP_STEP = 192
+MAX_GLOBAL_EP = 2e6 // MAX_EP_STEP + 1 
 GLOBAL_NET_SCOPE = 'Global_Net'
 UPDATE_GLOBAL_ITER = 32
 GAMMA = 0.90
@@ -82,13 +82,13 @@ class ACNet(object):
     def _build_net(self, scope):
         # w_init = tf.contrib.layers.xavier_initializer()
         with tf.variable_scope('actor'):
-            h1 = tf.layers.dense(self.s, 32, tf.nn.relu6, name='h1_a')
-            h2 = tf.layers.dense(h1, 32, tf.nn.relu6, name='h2_a')
+            h1 = tf.layers.dense(self.s, 64, tf.nn.relu6, name='h1_a')
+            h2 = tf.layers.dense(h1, 64, tf.nn.relu6, name='h2_a')
             mu = tf.layers.dense(h2, N_A, tf.nn.tanh, name='mu')
             sigma = tf.layers.dense(h2, N_A, tf.nn.softplus, name='sigma')
         with tf.variable_scope('critic'):
-            l1 = tf.layers.dense(self.s, 32, tf.nn.relu6, name='c_h1')
-            l2 = tf.layers.dense(l1, 32, tf.nn.relu6, name='c_h2')
+            l1 = tf.layers.dense(self.s, 64, tf.nn.relu6, name='c_h1')
+            l2 = tf.layers.dense(l1, 64, tf.nn.relu6, name='c_h2')
             v = tf.layers.dense(l2, 1, name='v')  # state value
         a_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope + '/actor')
         c_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope + '/critic')
@@ -103,6 +103,15 @@ class ACNet(object):
     def choose_action(self, s):  # run by a local
         s = s[np.newaxis, :]
         return SESS.run(self.A, {self.s: s})[0]
+
+    def save(self):
+        saver = tf.train.Saver()
+        saver.save(SESS, './a3c', write_meta_graph=False)
+
+    def restore(self):
+        print('===============')
+        saver = tf.train.Saver()
+        saver.restore(SESS, './a3c')
 
 
 class Worker(object):
@@ -172,12 +181,19 @@ def running_mean(x, N):
     return (cumsum[N:] - cumsum[:-N]) / float(N)
 
 if __name__ == "__main__":
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--retrain", help="retrain model", action="store_true")
+    args = parser.parse_args()
+
     SESS = tf.Session()
 
     with tf.device("/cpu:0"):
         OPT_A = tf.train.RMSPropOptimizer(LR_A, name='RMSPropA')
         OPT_C = tf.train.RMSPropOptimizer(LR_C, name='RMSPropC')
         GLOBAL_AC = ACNet(GLOBAL_NET_SCOPE)  # we only need its params
+            
         workers = []
         # Create worker
         for i in range(N_WORKERS):
@@ -185,7 +201,11 @@ if __name__ == "__main__":
             workers.append(Worker(i_name, GLOBAL_AC))
 
     COORD = tf.train.Coordinator()
+
     SESS.run(tf.global_variables_initializer())
+
+    if not args.retrain:
+        GLOBAL_AC.restore()
 
     if OUTPUT_GRAPH:
         if os.path.exists(LOG_DIR):
@@ -200,8 +220,7 @@ if __name__ == "__main__":
         worker_threads.append(t)
     COORD.join(worker_threads)
 
-    saver = tf.train.Saver()
-    saver.save(SESS, './a3c', write_meta_graph=False)
+    GLOBAL_AC.save()
 
     plt.plot(np.arange(len(GLOBAL_RUNNING_R)), GLOBAL_RUNNING_R)
     N = 100

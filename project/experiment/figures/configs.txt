@@ -59,7 +59,7 @@ ENTROPY_BETA = 0.02
 LR_A = 1e-4
 LR_C = 2e-4
 
-==================  EXPERIMENT ON MIN_BATCH_SIZE =================
+==================  EXPERIMENT ON SIMULATION STEPS =================
 
 FILE : ppo_1.png
 nsteps=2048
@@ -113,6 +113,18 @@ LR_C = 2e-4
 FILE : a3c_8.png
 TOTAL_STEPS = 5e6
 MAX_EP_STEP = 200
+UPDATE_GLOBAL_ITER = 32
+GAMMA = 0.9
+ENTROPY_BETA = 0.02
+LR_A = 1e-4
+LR_C = 2e-4
+
+
+========================== PPO Vs. A3C =========================
+
+FILE : a3c_9.png
+TOTAL_STEPS = 1e6
+MAX_EP_STEP = 192
 UPDATE_GLOBAL_ITER = 32
 GAMMA = 0.9
 ENTROPY_BETA = 0.02
