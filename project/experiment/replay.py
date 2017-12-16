@@ -193,12 +193,6 @@ if __name__ == "__main__":
         OPT_A = tf.train.RMSPropOptimizer(LR_A, name='RMSPropA')
         OPT_C = tf.train.RMSPropOptimizer(LR_C, name='RMSPropC')
         GLOBAL_AC = ACNet(GLOBAL_NET_SCOPE)  # we only need its params
-            
-        workers = []
-        # Create worker
-        for i in range(N_WORKERS):
-            i_name = 'W_%i' % i   # worker name
-            workers.append(Worker(i_name, GLOBAL_AC))
 
     COORD = tf.train.Coordinator()
 
@@ -206,29 +200,6 @@ if __name__ == "__main__":
 
     if not args.retrain:
         GLOBAL_AC.restore()
-
-    if OUTPUT_GRAPH:
-        if os.path.exists(LOG_DIR):
-            shutil.rmtree(LOG_DIR)
-        tf.summary.FileWriter(LOG_DIR, SESS.graph)
-
-    worker_threads = []
-    for worker in workers:
-        job = lambda: worker.work()
-        t = threading.Thread(target=job)
-        t.start()
-        worker_threads.append(t)
-    COORD.join(worker_threads)
-
-    GLOBAL_AC.save()
-
-    plt.plot(np.arange(len(GLOBAL_RUNNING_R)), GLOBAL_RUNNING_R)
-    N = 100
-    plt.plot(np.arange(len(GLOBAL_RUNNING_R)-N+1), running_mean(GLOBAL_RUNNING_R, N))
-    plt.xlabel('Episode')
-    plt.ylabel('Moving Reward')
-    plt.ion()
-    plt.show()
 
     # Render game after
     env = gym.make(GAME)

@@ -41,7 +41,8 @@ def ts2xy(ts, xaxis):
     return x, y
 
 def plot_curves(xy_list, xaxis, title):
-    plt.figure(figsize=(8,2))
+    #plt.figure(figsize=(8,2))
+    plt.figure()
     maxx = max(xy[0][-1] for xy in xy_list)
     minx = 0
     for (i, (x, y)) in enumerate(xy_list):
@@ -76,8 +77,8 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--dirs', help='List of log directories', nargs = '*', default=['./log'])
     parser.add_argument('--num_timesteps', type=int, default=int(10e6))
-    parser.add_argument('--xaxis', help = 'Varible on X-axis', default = X_TIMESTEPS)
-    parser.add_argument('--task_name', help = 'Title of plot', default = 'Breakout')
+    parser.add_argument('--xaxis', help = 'Varible on X-axis', default = X_EPISODES)
+    parser.add_argument('--task_name', help = 'Title of plot', default = '')
     args = parser.parse_args()
     args.dirs = [os.path.abspath(dir) for dir in args.dirs]
     plot_results(args.dirs, args.num_timesteps, args.xaxis, args.task_name)

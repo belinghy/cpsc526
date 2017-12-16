@@ -60,4 +60,4 @@ if __name__ == '__main__':
     if not REPLAY_ONLY:
         agent.train(env=env, max_ep=1250, steps_per_ep=60, model_path=model_file, train_from_model=train_from_model, show_plot=VISUAL_ON)
 
-    agent.replay(env=env, model_path=model_file, sim_length=80)
+    agent.replay(env=env, model_path=model_file, sim_length=150)
